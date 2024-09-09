@@ -1,26 +1,35 @@
-from fastapi import APIRouter,Body
+from fastapi import APIRouter, Body
 from models.usuario import Usuario
-
 from database import UsuarioModel
 
-users_route = APIRouter()
+usuario_route = APIRouter()
 
-@users_route.get("/")
-async def get_user():
-    try:
-        return{"message": "User date"}
-    except Exception as e :
-        return {"error" : str(e)}
+@usuario_route.get("/usuarios")
+def get_usuarios():
+    return list(UsuarioModel.select())
 
-@users_route.post("/")
-async def post_user(usuario : Usuario = Body(...)):
+@usuario_route.get("/usuarios/{user_id}")
+def get_usuario(user_id: int):
+    return UsuarioModel.get(UsuarioModel.id == user_id)
 
-    try:
-        return {"message":"User created"}
+@usuario_route.post("/usuarios")
+def create_usuario(usuario: Usuario = Body(...)):
+    nuevo_usuario = UsuarioModel.create(
+        name=usuario.name,
+        email=usuario.email,
+        address=usuario.address,
+        age=usuario.age
+    )
+    return nuevo_usuario
 
-    except Exception as e:
-        return{"error":str(e)}
+@usuario_route.put("/usuarios/{user_id}")
+def update_usuario(user_id: int, usuario_data: dict):
+    UsuarioModel.update(**usuario_data).where(UsuarioModel.id == user_id).execute()
+    return {"message": "Usuario actualizado"}
 
-
+@usuario_route.delete("/usuarios/{user_id}")
+def delete_usuario(user_id: int):
+    UsuarioModel.delete().where(UsuarioModel.id == user_id).execute()
+    return {"message": "Usuario eliminado"}
 
 

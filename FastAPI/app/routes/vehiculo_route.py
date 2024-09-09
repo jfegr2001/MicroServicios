@@ -1,18 +1,34 @@
 from fastapi import APIRouter, Body
 from models.vehiculo import Vehiculo
+from database import VehiculoModel
 
-vehiculos_route = APIRouter()
+vehiculo_route = APIRouter()
 
-@vehiculos_route.get("/")
-async def get_vehiculo():
-    try:
-        return {"message": "Vehicle data"}
-    except Exception as e:
-        return {"error": str(e)}
+@vehiculo_route.get("/vehiculos")
+def get_vehiculos():
+    return list(VehiculoModel.select())
 
-@vehiculos_route.post("/")
-async def post_vehiculo(vehiculo: Vehiculo = Body(...)):
-    try:
-        return {"message": "Vehicle created"}
-    except Exception as e:
-        return {"error": str(e)}
+@vehiculo_route.get("/vehiculos/{matricula}")
+def get_vehiculo(matricula: str):
+    return VehiculoModel.get(VehiculoModel.matricula == matricula)
+
+@vehiculo_route.post("/vehiculos")
+def create_vehiculo(vehiculo: Vehiculo = Body(...)):
+    nuevo_vehiculo = VehiculoModel.create(
+        marca=vehiculo.marca,
+        modelo=vehiculo.modelo,
+        cilindraje=vehiculo.cilindraje,
+        color=vehiculo.color,
+        matricula=vehiculo.matricula
+    )
+    return nuevo_vehiculo
+
+@vehiculo_route.put("/vehiculos/{matricula}")
+def update_vehiculo(matricula: str, vehiculo_data: dict):
+    VehiculoModel.update(**vehiculo_data).where(VehiculoModel.matricula == matricula).execute()
+    return {"message": "Vehículo actualizado"}
+
+@vehiculo_route.delete("/vehiculos/{matricula}")
+def delete_vehiculo(matricula: str):
+    VehiculoModel.delete().where(VehiculoModel.matricula == matricula).execute()
+    return {"message": "Vehículo eliminado"}
